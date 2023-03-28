@@ -56,7 +56,7 @@ export default {
       // кол-во прокручиваемых картинок по нажатию кнопок next prev
       numbersOfImagesToSwitch: 1,
       // автопрокрутка
-      autoStart: false,
+      autoStart: true,
       // таймаут автопрокрутки в ms
       autoStartTimeout: 1500,
       // gap slider-body
