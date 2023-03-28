@@ -1,19 +1,31 @@
-# slider
+# A simple, endless slider on Vue.js 3/ Простой, бесконечный слайдер на Vue.js 3
 
-## Project setup
+### Functionality / Функциональность
 ```
-npm install
-```
-
-### Compiles and hot-reloads for development
-```
-npm run serve
-```
-
-### Compiles and minifies for production
-```
-npm run build
+Бесконечный
+Настройка перелистывания заданного количества картинок
+Адаптивный
+Переход к активной картинке по клику на дот
+Переход по клику на стрелки
+Переход по свайпу на мобильных устройствах
+По клику картинка открывается в модальном окне
 ```
 
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+## Setup / Настройки слайдера
+```
+Настройка объекта с картинками - в store/index.js
+Настрока параметров слайдера - в App.vue
+```
+
+### Posting on your website / Размещение на своем сайте
+```
+Создайте div с id="app-slider" на своей странице, куда надо подключить слайдер
+Картинки должны находится в папке assets/slider-img/
+Скопируйте папки соблюдая структуру на хостинг
+Подключите скрипты на свою страницу
+```
+
+### Example of slider operation / Пример работы слайдера
+```
+http://test.jnik.s53.hhos.ru/
+```

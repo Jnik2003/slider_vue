@@ -1,76 +1,90 @@
 <template>
-  <div class="container">
-    <section>
-      <!-- вся анимация за счет flip-list  -->
-      <div class="slider" :style="sliderStyle" ref="slider">
+  <div class="slider-container">
 
-        <div class="btns">
-          <ButtonPrev :btnPrevDisabled="btnPrevDisabled" @prev="prev" class="btn btn-next">
-            <ArrowLeft />
-          </ButtonPrev>
+    <div class="slider" :style="sliderStyle" ref="slider">
 
-          <ButtonNext :btnNextDisabled="btnNextDisabled" @next="next" class="btn btn-next">
-            <ArrowRight />
-          </ButtonNext>
-        </div>
+      <div class="btns">
+        <ButtonPrev :btnPrevDisabled="btnPrevDisabled" @prev="prev" class="btn btn-next" @click="clearInt()">
+          <ArrowLeft />
+        </ButtonPrev>
 
-        <transition-group name="flip-list" tag="div" class="slider-body" :style="sliderBodyStyle">
-          <div v-for="item in getImg" :key="item.id" ref="slider-items" class="slider-item" :data-ind="item.id">
-            <SingleImage :item="item" :imgWidth="imgWidth" />
-          </div>
-        </transition-group>
-
-        <div class="dots" v-if="showDots">
-          <div v-for="item, ind in getImg" :key="ind" class="dot-item" :class="{ ['active-dot']: activeId.includes(ind) }"
-            @click="dotAction(ind)">
-          </div>
-        </div>
-
-
+        <ButtonNext :btnNextDisabled="btnNextDisabled" @next="next" class="btn btn-next" @click="clearInt()">
+          <ArrowRight />
+        </ButtonNext>
       </div>
 
+      <transition-group name="flip-list" tag="div" class="slider-body" :style="sliderBodyStyle">
+        <div v-for="item in getImg" :key="item.id" ref="slider-items" class="slider-item" :data-ind="item.id"
+          v-touch:swipe.left="next" v-touch:swipe.right="prev">
+          <SingleImage :item="item" :imgWidth="imgWidth" @imgToModal="openModal" />
+        </div>
+      </transition-group>
+
+      <div class="dots" v-if="showDots">
+        <div v-for="item, ind in getImg" :key="ind" class="dot-item" :class="{ ['active-dot']: activeId.includes(ind) }"
+          @click="dotAction(ind), clearInt()">
+        </div>
+      </div>
+    </div>
+
+    <ModalComp v-if="isModalVisible" v-model:isModalVisible="isModalVisible" :imgNameToModal="imgNameToModal">
+    </ModalComp>
 
 
-    </section>
+
   </div>
 </template>
 
 <script>
+let autoInt = 0
 
 export default {
   name: 'App',
   data() {
     return {
-      // параметры при загрузке страницы
+      // настраиваемые параметры +++++++++++++
+
+      // параметры применяются при загрузке страницы
       start: {
         //ширина картинки
-        imgWidth: 200,
-        // кол-во отображаемых картинок
-        imgCount: 5,
+        imgWidth: 300,
+        // кол-во отображаемых картинок (не более "всего картинок" - numbersOfImagesToSwitch * 2)
+        imgCount: 4,
         // минимальная ширина картинки (для смартфона преимущественно)
         minWidth: 250
       },
-      // -------------------------------
       // кол-во прокручиваемых картинок по нажатию кнопок next prev
-      numbersOfImagesToSwitch: 2,
+      numbersOfImagesToSwitch: 1,
+      // автопрокрутка
+      autoStart: false,
+      // таймаут автопрокрутки в ms
+      autoStartTimeout: 1500,
       // gap slider-body
       sliderBodyGap: 10,
-      // сколько заблокированы кнопки next prev msec
+      // сколько заблокированы кнопки next prev в msec пока идет пролистывание
       btnDisabledTime: 300,
+      // показывать ли доты
+      showDots: true,
+
+      // +++++++++++++++++++++++++++++++++
+
       btnNextDisabled: false,
       btnPrevDisabled: false,
 
-      // Эти imgWidth и imgCount не исправлять, они меняются динамически
+      // Эти параметры не исправлять, они меняются динамически
       //ширина картинки
       imgWidth: 0,
       // кол-во отображаемых картинок
       imgCount: 0,
+      // ------------------
 
-      // показывать ли доты
-      showDots: true,
-      // для подкрашивания активных дотов, здесь индексы активных дотов
+      // для подкрашивания активных дотов, здесь будут индексы активных дотов
       activeId: [],
-
+      // модальное окно
+      isModalVisible: false,
+      // имя файла картинки переданное в модальное окно
+      imgNameToModal: ''
+      // -------------------------------------
     }
   },
   created() {
@@ -87,7 +101,6 @@ export default {
     sliderBodyStyle() {
       return {
         gap: this.sliderBodyGap + 'px',
-        // сдвиг для того чтобы не было эффекта "пустой картинки" когда с начала массива вырезается количество одновременно прокручиваемых картинок(т.е. сдвиг влево на 1, 2 , 3 в зависимости от условий)
         transform: `translate(-${(this.imgWidth + this.sliderBodyGap) * this.numbersOfImagesToSwitch}px)`,
       }
     },
@@ -97,10 +110,14 @@ export default {
   },
 
   methods: {
-    // принимает параметр из функции dotAction. Если параметра нет, то перескакивает на число картинок определенное в this.numbersOfImagesToSwitch. Но, если управление дотами - то на одну картинку
-    next(dots = this.numbersOfImagesToSwitch) {
+    next(...args) {
+      let [, , jump] = args
+      if (args[1] !== undefined) this.clearInt()
+      jump === undefined ? jump = this.numbersOfImagesToSwitch : false
+
       this.btnNextDisabled = true
-      this.$store.dispatch('next', dots)
+
+      this.$store.dispatch('next', jump)
         .then(() => {
           this.setActiveItems()
         })
@@ -108,9 +125,12 @@ export default {
         this.btnNextDisabled = false
       }, this.btnDisabledTime)
     },
-    prev(dots = this.numbersOfImagesToSwitch) {
+    prev(...args) {
+      let [, , jump] = args
+      if (args[1] !== undefined) this.clearInt()
+      jump === undefined ? jump = this.numbersOfImagesToSwitch : false
       this.btnPrevDisabled = true
-      this.$store.dispatch('prev', dots)
+      this.$store.dispatch('prev', jump)
         .then(() => {
           this.setActiveItems()
         })
@@ -122,23 +142,15 @@ export default {
       this.$nextTick(() => {
         let documentWidth = document.documentElement.clientWidth
 
-        let imgVisibleCount = Math.floor(documentWidth / (this.imgWidth + this.sliderBodyGap))
-
-        if (imgVisibleCount <= this.start.imgCount && imgVisibleCount > 0) {
-          this.imgCount = Math.floor(documentWidth / (this.imgWidth + this.sliderBodyGap))
-        }
-
-        this.imgCount === 1 ?
-          this.sliderBodyGap = 0 :
-          this.sliderBodyGap = 10
+        this.imgCount = Math.floor(documentWidth / (this.imgWidth + this.sliderBodyGap))
+        this.imgCount > this.start.imgCount ? this.imgCount = this.start.imgCount : false
+        documentWidth <= this.start.imgWidth ? this.imgWidth = documentWidth * 0.95 : this.imgWidth = this.start.imgWidth
+        this.imgCount > 1 ? this.sliderBodyGap = 10 : this.sliderBodyGap = 0
 
         this.setActiveItems()
       })
-
-
     },
 
-    // если картинки в поле зрения положим их индексы в массив activeId (для дотов)
     setActiveItems() {
       const items = document.querySelectorAll('.slider-item')
       items.forEach(item => {
@@ -146,19 +158,16 @@ export default {
       })
       this.activeId = []
       for (let i = this.numbersOfImagesToSwitch; i < this.imgCount + this.numbersOfImagesToSwitch; i++) {
-        // items[i].classList.add('active')
         this.activeId.push(+items[i].dataset.ind)
-
       }
     },
-    // при клике по дотам
     dotAction(ind) {
       let diff = ind - this.activeId[0]
       if (diff <= ind && diff > 0) {
         while (diff > 0) {
           setTimeout(() => {
-            // из дотов передаем параметр 1 чтобы по логике dotAction(ind) за одну итерацию переход на одну картинку
-            this.next(1)
+            const jump = 1
+            this.next(null, "left", jump)
           }, 0)
           diff--
         }
@@ -166,11 +175,25 @@ export default {
       else {
         while (diff < 0) {
           setTimeout(() => {
-            this.prev(1)
+            const jump = 1
+            this.prev(null, "left", jump)
           }, 0)
           diff++
         }
       }
+    },
+    openModal(img) {
+      this.clearInt()
+      this.isModalVisible = true
+      this.imgNameToModal = img
+    },
+    autoStartSlider() {
+      autoInt = setInterval(() => {
+        this.next()
+      }, this.autoStartTimeout)
+    },
+    clearInt() {
+      clearInterval(autoInt)
     }
   },
 
@@ -184,7 +207,6 @@ export default {
       this.updateWidth()
     })
 
-    // для избежания некрасивого эффекта при первой загрузки слайдера
     this.$refs['slider-items'].forEach(item => {
       item.style.opacity = 0
     })
@@ -195,6 +217,8 @@ export default {
       })
     }, 500)
     this.setActiveItems()
+
+    this.autoStart ? this.autoStartSlider() : false
   }
 }
 </script>
@@ -215,16 +239,15 @@ html {
   margin-top: 60px;
 }
 
-.container {
-  max-width: 1200px;
+.slider-container {
+  width: 100%;
   margin: 0 auto;
+  position: relative;
 }
 
 .slider {
-  // width: 900px;
   overflow: hidden;
   margin: 0 auto;
-  border: 1px solid lime;
 }
 
 .btns {
@@ -265,19 +288,11 @@ html {
 
 
 .slider-body {
-  // width: inherit;
   width: 100%;
-  // border: 1px solid greenyellow;
   display: inline-flex;
-  // justify-content: center;
   flex-wrap: nowrap;
-  // transition: .3s;
   margin: 0 auto;
   transform: translateX(-310px);
-}
-
-.slider-body__img {
-  // padding: 10px;
 }
 
 .flip-list-move {

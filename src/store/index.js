@@ -11,8 +11,6 @@ export default createStore({
   },
   mutations: {
     next(state, numbersOfImagesToSwitch) {
-      // console.log(numbersOfImagesToSwitch)
-      // перемещаем с начала массива в конец
       async function goEnd() {
         let removedFromStart = await state.images.splice(
           0,
@@ -33,14 +31,6 @@ export default createStore({
       }
       goStart()
     },
-    // dotsAction(state, [ind, offset]) {
-    //   console.log(ind, offset)
-    //   function move(from, to) {
-    //     state.images.splice(to, 0, state.images.splice(from, 1)[0])
-    //     return state.images
-    //   }
-    //   state.images = move(ind, offset)
-    // },
   },
   actions: {
     next({ commit }, numbersOfImagesToSwitch) {
@@ -49,9 +39,6 @@ export default createStore({
     prev({ commit }, numbersOfImagesToSwitch) {
       commit('prev', numbersOfImagesToSwitch)
     },
-    // dotsAction({ commit }, [ind, offset]) {
-    //   commit('dotsAction', [ind, offset])
-    // },
   },
   modules: {},
 })

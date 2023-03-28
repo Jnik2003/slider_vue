@@ -1,6 +1,7 @@
 <template>
     <div class="slider-body__img">
-        <img class="img" :style="imgStyle" :src="require(`@/assets/slider-img/${item.src}`)" alt="item.text">
+        <img class="img" :style="imgStyle" :src="require(`@/assets/slider-img/${item.src}`)" :alt="item.text"
+            @click="sendImgToModal(item.src)">
         <div class="slider-body__text">
             {{ item.text }}
         </div>
@@ -11,6 +12,7 @@
 <script>
 export default {
     name: 'SingleImage',
+    emits:['img-to-modal'],
     props: {
         item: {
             type: Object,
@@ -19,14 +21,20 @@ export default {
         imgWidth: {
             type: Number,
             default: 300
-        }
+        },
+
     },
     computed: {
         imgStyle() {
             return {
-                width: this.imgWidth + 'px'
+                width: this.imgWidth + 'px',
             }
         },
+    },
+    methods: {
+        sendImgToModal(img) {
+            this.$emit('imgToModal', img)
+        }
     }
 }
 </script>
@@ -35,5 +43,6 @@ export default {
 .img {
     object-fit: cover;
     aspect-ratio: 16/9;
+    cursor: pointer;
 }
 </style>

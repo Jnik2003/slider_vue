@@ -7,6 +7,7 @@
 <script>
 export default {
     name: 'ButtonNext',
+    emits:['next', 'click'],
     props: {
         btnNextDisabled: {
             type: Boolean,

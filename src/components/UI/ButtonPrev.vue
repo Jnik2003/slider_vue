@@ -7,6 +7,7 @@
 <script>
 export default {
     name: 'ButtonPrev',
+    emits:['prev', 'click'],
     props: {
         btnPrevDisabled: {
             type: Boolean,
