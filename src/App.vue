@@ -4,11 +4,11 @@
     <div class="slider" :style="sliderStyle" ref="slider">
 
       <div class="btns">
-        <ButtonPrev :btnPrevDisabled="btnPrevDisabled" @prev="prev" class="btn btn-next" @click="clearInt()">
+        <ButtonPrev :prevbtnDisabled="prevbtnDisabled" @prev="prev" class="btn btn-next" @click="clearInt()">
           <ArrowLeft />
         </ButtonPrev>
 
-        <ButtonNext :btnNextDisabled="btnNextDisabled" @next="next" class="btn btn-next" @click="clearInt()">
+        <ButtonNext :nextbtnDisabled="nextbtnDisabled" @next="next" class="btn btn-next" @click="clearInt()">
           <ArrowRight />
         </ButtonNext>
       </div>
@@ -68,8 +68,8 @@ export default {
 
       // +++++++++++++++++++++++++++++++++
 
-      btnNextDisabled: false,
-      btnPrevDisabled: false,
+      nextbtnDisabled: false,
+      prevbtnDisabled: false,
 
       // Эти параметры не исправлять, они меняются динамически
       //ширина картинки
@@ -89,6 +89,9 @@ export default {
   },
   created() {
     window.addEventListener('resize', this.updateWidth);
+  },
+  destroyed() {
+    window.removeEventListener('resize', this.updateWidth);
   },
 
   computed: {
@@ -110,75 +113,73 @@ export default {
   },
 
   methods: {
+
+    switchImages(jump, direction, args) {
+      if (args[1] !== undefined) this.clearInt()
+      this[direction + 'btnDisabled'] = true
+
+      this.$store.dispatch(direction, jump)
+        .then(() => {
+          this.setActiveItems()
+        })
+      setTimeout(() => {
+        this[direction + 'btnDisabled'] = false
+      }, this.btnDisabledTime)
+    },
+
     next(...args) {
-      let [, , jump] = args
-      if (args[1] !== undefined) this.clearInt()
-      jump === undefined ? jump = this.numbersOfImagesToSwitch : false
-
-      this.btnNextDisabled = true
-
-      this.$store.dispatch('next', jump)
-        .then(() => {
-          this.setActiveItems()
-        })
-      setTimeout(() => {
-        this.btnNextDisabled = false
-      }, this.btnDisabledTime)
+      const [, , jump] = args
+      const jumpValue = jump === undefined ? this.numbersOfImagesToSwitch : jump
+      this.switchImages(jumpValue, 'next', args)
     },
+
     prev(...args) {
-      let [, , jump] = args
-      if (args[1] !== undefined) this.clearInt()
-      jump === undefined ? jump = this.numbersOfImagesToSwitch : false
-      this.btnPrevDisabled = true
-      this.$store.dispatch('prev', jump)
-        .then(() => {
-          this.setActiveItems()
-        })
-      setTimeout(() => {
-        this.btnPrevDisabled = false
-      }, this.btnDisabledTime)
+      const [, , jump] = args
+      const jumpValue = jump === undefined ? this.numbersOfImagesToSwitch : jump
+      this.switchImages(jumpValue, 'prev', args)
     },
+
     updateWidth() {
-      this.$nextTick(() => {
-        let documentWidth = document.documentElement.clientWidth
+      let documentWidth = document.documentElement.clientWidth
 
-        this.imgCount = Math.floor(documentWidth / (this.imgWidth + this.sliderBodyGap))
-        this.imgCount > this.start.imgCount ? this.imgCount = this.start.imgCount : false
-        documentWidth <= this.start.imgWidth ? this.imgWidth = documentWidth * 0.95 : this.imgWidth = this.start.imgWidth
-        this.imgCount > 1 ? this.sliderBodyGap = 10 : this.sliderBodyGap = 0
+      this.imgCount = Math.floor(documentWidth / (this.imgWidth + this.sliderBodyGap))
+      if (this.imgCount > this.start.imgCount) {
+        this.imgCount = this.start.imgCount
+      }
+      if (documentWidth <= this.start.imgWidth) {
+        this.imgWidth = documentWidth * 0.95
+      } else {
+        this.imgWidth = this.start.imgWidth
+      }
+      this.sliderBodyGap = this.imgCount > 1 ? 10 : 0
 
-        this.setActiveItems()
-      })
+      this.setActiveItems()
     },
 
     setActiveItems() {
       const items = document.querySelectorAll('.slider-item')
-      items.forEach(item => {
-        item.classList.remove('active')
-      })
+
       this.activeId = []
       for (let i = this.numbersOfImagesToSwitch; i < this.imgCount + this.numbersOfImagesToSwitch; i++) {
         this.activeId.push(+items[i].dataset.ind)
       }
     },
+
     dotAction(ind) {
       let diff = ind - this.activeId[0]
       if (diff <= ind && diff > 0) {
-        while (diff > 0) {
+        const jump = 1;
+        for (let i = 0; i < diff; i++) {
           setTimeout(() => {
-            const jump = 1
             this.next(null, "left", jump)
           }, 0)
-          diff--
         }
-      }
-      else {
-        while (diff < 0) {
+      } else if (diff < 0) {
+        const jump = 1;
+        for (let i = diff; i < 0; i++) {
           setTimeout(() => {
-            const jump = 1
             this.prev(null, "left", jump)
           }, 0)
-          diff++
         }
       }
     },

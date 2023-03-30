@@ -1,5 +1,5 @@
 <template>
-    <button @click="sendNext" :disabled="btnNextDisabled">
+    <button @click="sendNext" :disabled="nextbtnDisabled">
         <slot></slot>
     </button>
 </template>
@@ -9,7 +9,7 @@ export default {
     name: 'ButtonNext',
     emits:['next'],
     props: {
-        btnNextDisabled: {
+        nextbtnDisabled: {
             type: Boolean,
             default: false
         }

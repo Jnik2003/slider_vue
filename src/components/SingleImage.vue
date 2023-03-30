@@ -12,7 +12,7 @@
 <script>
 export default {
     name: 'SingleImage',
-    emits:['img-to-modal'],
+    emits:['imgToModal'],
     props: {
         item: {
             type: Object,

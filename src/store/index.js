@@ -51,8 +51,8 @@ function arr() {
     { id: 3, src: '4.jpg', text: 'Описание' },
     { id: 4, src: '5.jpg', text: 'Описание' },
     { id: 5, src: '6.jpg', text: 'Описание' },
-    { id: 6, src: '7.jpg', text: 'Описание' },
-    { id: 7, src: '8.jpg', text: 'Описание' },
-    { id: 8, src: '9.jpg', text: 'Описание' },
+    // { id: 6, src: '7.jpg', text: 'Описание' },
+    // { id: 7, src: '8.jpg', text: 'Описание' },
+    // { id: 8, src: '9.jpg', text: 'Описание' },
   ]
 }

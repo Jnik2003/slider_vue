@@ -1,5 +1,5 @@
 <template>
-    <button @click="sendPrev" :disabled="btnPrevDisabled">
+    <button @click="sendPrev" :disabled="prevbtnDisabled">
         <slot></slot>
     </button>
 </template>
@@ -9,7 +9,7 @@ export default {
     name: 'ButtonPrev',
     emits:['prev'],
     props: {
-        btnPrevDisabled: {
+        prevbtnDisabled: {
             type: Boolean,
             default: false
         }
